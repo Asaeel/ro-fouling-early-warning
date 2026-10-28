@@ -27,3 +27,6 @@ src/*.egg-info/
 *~
 src/fouling/static/*.backup-*
 src/fouling/static/*.backup-*
+
+# Ignore all backup files
+*backup*
