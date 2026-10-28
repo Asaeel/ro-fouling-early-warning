@@ -1,0 +1,48 @@
+{
+  "data": {
+    "observations": 540,
+    "start_date": "2024-01-04",
+    "end_date": "2025-06-26",
+    "missing_calendar_dates": 0,
+    "phase_counts": {
+      "Handover": 367,
+      "Commissioning": 90,
+      "Recommissioning": 83
+    },
+    "zero_ro_flow_days": 19
+  },
+  "horizon_days": 7,
+  "split_sizes": {
+    "train": 364,
+    "validation": 71,
+    "test": 71
+  },
+  "validation_metrics": {
+    "random_forest": {
+      "mae": 529.356980035314,
+      "rmse": 609.1289873563941
+    },
+    "persistence_baseline": {
+      "mae": 258.2356338028169,
+      "rmse": 365.66014145940585
+    }
+  },
+  "test_metrics": {
+    "selected_model": {
+      "mae": 97.01549295774646,
+      "rmse": 183.42107004161562
+    },
+    "random_forest": {
+      "mae": 110.9750521306369,
+      "rmse": 135.16194659965984
+    },
+    "persistence_baseline": {
+      "mae": 97.01549295774646,
+      "rmse": 183.42107004161562
+    }
+  },
+  "selected_model": "persistence_baseline",
+  "artifact_path": "artifacts/real_station_flow_model.joblib",
+  "predictions_path": "data/real_station_test_predictions.csv",
+  "interpretation": "The model forecasts RO production flow only. It does not independently diagnose fouling or determine whether chemical cleaning is required."
+}

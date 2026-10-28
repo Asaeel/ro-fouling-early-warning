@@ -2,7 +2,7 @@
 
 Prototype software for normalizing RO operating data, forecasting a 7-day normalized-flow indicator, and estimating time to a configurable cleaning threshold.
 
-> **Important limitation:** The included model is trained on explicitly synthetic data. The normalization equations are simplified approximations. This repository is a runnable engineering prototype, not a validated plant-maintenance tool. Do not use its cleaning estimates for operational decisions without membrane/vendor-specific normalization, real plant data, and engineering review.
+> **Important limitation:** This repository contains two separate workflows: a synthetic-data forecasting prototype and a real-station RO production-flow analysis. The synthetic model is not trained on plant data. The real-station workflow forecasts RO production flow and flags low-flow patterns; it does not independently diagnose membrane fouling or determine chemical-cleaning requirements. Neither workflow is validated for operational maintenance decisions.
 
 ## Requirements
 - Python 3.10+
@@ -74,6 +74,28 @@ The candidate model predicts normalized flow 7 days ahead using lagged normalize
 ## Data source log
 See `data/data_source_log.md`. Public RO performance datasets may support normalization experiments but do not necessarily include long-term fouling labels or cleaning events. Synthetic data are used only for a runnable demonstration.
 
+## Real-station data analysis
+
+The repository also includes an analysis of `data/MBR_RO_AIOT_daily_flow_540d.xlsx`, containing 540 daily observations from 2024-01-04 through 2025-06-26. This is a separate workflow from the synthetic-data model described above.
+
+Run the rule-based low-flow analysis:
+
+```bash
+fouling analyze-real data/MBR_RO_AIOT_daily_flow_540d.xlsx --output data/real_analysis_results.csv
+```
+
+Train and evaluate the 7-day RO production-flow forecasting baseline:
+
+```bash
+python -m fouling.train_real_flow
+```
+
+The real-station training script reports chronological train/validation/test results and compares Random Forest against a persistence baseline. In the recorded run, persistence was selected because its validation MAE (258.24 m³/day) was lower than Random Forest's (529.36 m³/day). On the held-out test segment, the selected baseline had MAE 97.02 m³/day and RMSE 183.42 m³/day. These values describe this dataset and split only; they are not proof of fouling-detection performance or generalization to another plant.
+
+Generated files include `data/real_station_model_metrics.json`, `data/real_station_test_predictions.csv`, and `artifacts/real_station_flow_model.joblib`. The rule-based analysis output is `data/real_analysis_results.csv`.
+
+The low-flow rules use historical production-flow observations and operational phase. Alerts are screening indicators, not confirmed fouling labels. Baselines may drift during sustained low production, and zero production may have causes other than membrane fouling. Review results with a qualified process engineer before any operational use.
+
 ## Tests
 ```bash
 pytest -q
@@ -86,7 +108,7 @@ docker run --rm -p 8000:8000 ro-fouling-early-warning
 ```
 
 ## Known limitations
-- Synthetic training data only; metrics are not evidence of real plant performance.
+- The original forecasting model is trained on synthetic data. The separate real-station workflow predicts production flow and flags low-flow patterns, not confirmed fouling.
 - Simplified temperature and osmotic-pressure correction.
 - Cleaning time is trend extrapolation and can be wrong after operational changes.
 - No plant-specific membrane geometry, recovery, membrane age, cleaning records, or sensor calibration.
