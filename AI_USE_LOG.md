@@ -44,3 +44,38 @@ This is a working log. Keep it accurate and update it after every further tool o
 - The rule-based analysis produced 47 alert days, 47 watch-low-flow days, and 19 production-stopped days in the recorded run. These are rule outputs, not verified fouling events.
 - Latest test and compilation checks reported by the user: 14 tests passed; `python -m compileall -q src tests` completed successfully.
 - Documentation was updated to distinguish the synthetic forecasting prototype from the real-station production-flow workflow. Re-run checks after documentation changes and record their actual results.
+
+## Final Validation — 28 October 2026
+
+- **Automated tests:** `python -m pytest -q` — 16 tests passed, as confirmed in the terminal.
+- **Code compilation:** `python -m compileall -q src tests` completed successfully.
+- **Git whitespace check:** `git diff --cached --check` completed without reported errors before the final commit.
+- **Git commit:** `0e00ab5` — Add real-station flow analysis and prediction tests.
+- **Repository status:** `git status --short` returned no entries immediately after the commit.
+- **Docker build:** The local Docker image was rebuilt and the container was started successfully, as confirmed by the user.
+- **API verification:** The user confirmed successful testing of `/health`, `/predict`, and `/analyze-real`.
+- **Documentation:** README and this AI use log document the real-station workflow and its limitations.
+
+### Scientific limitations
+
+- The original predictive model is trained on synthetic data and is not validated for operational plant decisions.
+- The real-station workflow forecasts RO production flow; low-flow alerts do not independently establish membrane fouling or determine when cleaning is required.
+- The real-station dataset contains 540 daily observations. The forecasting experiment uses chronological train, validation, and test splits.
+- The model metrics are experimental results and should not be interpreted as proof of fouling detection performance.
+## Final Validation — 28 October 2026
+
+- **Automated tests:** `python -m pytest -q` — 16 tests passed, as confirmed in the terminal.
+- **Code compilation:** `python -m compileall -q src tests` completed successfully.
+- **Git whitespace check:** `git diff --cached --check` completed without reported errors before the final commit.
+- **Git commit:** `0e00ab5` — Add real-station flow analysis and prediction tests.
+- **Repository status:** `git status --short` returned no entries immediately after the commit.
+- **Docker build:** The local Docker image was rebuilt and the container was started successfully, as confirmed by the user.
+- **API verification:** The user confirmed successful testing of `/health`, `/predict`, and `/analyze-real`.
+- **Documentation:** README and this AI use log document the real-station workflow and its limitations.
+
+### Scientific limitations
+
+- The original predictive model is trained on synthetic data and is not validated for operational plant decisions.
+- The real-station workflow forecasts RO production flow; low-flow alerts do not independently establish membrane fouling or determine when cleaning is required.
+- The real-station dataset contains 540 daily observations. The forecasting experiment uses chronological train, validation, and test splits.
+- The model metrics are experimental results and should not be interpreted as proof of fouling detection performance.
