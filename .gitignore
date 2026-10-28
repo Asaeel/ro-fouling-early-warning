@@ -26,3 +26,4 @@ src/*.egg-info/
 *.backup-*
 *~
 src/fouling/static/*.backup-*
+src/fouling/static/*.backup-*
