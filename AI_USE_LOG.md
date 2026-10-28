@@ -1,81 +1,74 @@
 # AI Use Log
 
-This is a working log. Keep it accurate and update it after every further tool or manual check.
+## 1. Tools used and purposes
 
-## Tools used so far
-- ChatGPT: helped translate the brief into a software plan, draft the project structure and code, and identify assumptions that need to be disclosed.
-- Web search/browser: reviewed public landing pages for candidate RO datasets and their descriptions, variables, and access notes.
-- Python execution environment: compiled the Python files, ran pytest, trained the demonstration artefact, and ran a prediction smoke test. Local validation was completed on the target Mac. The Docker image was built and the container, dashboard, and health endpoint were checked.
+- **ChatGPT:** Helped translate the project brief into an implementation plan, design the Python package and API, review validation logic, explain model-selection decisions, and improve documentation.
+- **Web search and browser:** Reviewed public landing pages and descriptions for candidate RO and membrane-related datasets, including their access conditions and suitability. Candidate sources were not treated as verified training data without further inspection.
+- **Python and local terminal:** Used to implement and compile the package, train and evaluate the prototype, run automated tests, inspect the real-station data, build and run Docker, test API endpoints, and validate the repository.
+- **Git and GitHub:** Used for version control, documenting changes, and publishing the project repository.
 
-## Key prompts used (summarized)
-1. “Find public datasets for reverse-osmosis desalination with time-series pressure, temperature, salinity, permeate flow, and fouling/cleaning labels; distinguish direct downloads from data available on request.”
-2. “Design time-aware validation for normalized permeate-flow forecasting without leakage and compare with a simple baseline.”
-3. “Build a runnable Python package/API with input validation, tests, versioned artefact, configuration, README, and documented limitations.”
+## 2. Key prompts used (summarized)
 
-## Corrections and verification
-- Generic feature scaling (for example, StandardScaler) is not physical normalization for temperature, pressure, and salinity. The prototype uses an explicit simplified temperature/net-driving-pressure correction and documents its limitations.
-- Public datasets that characterize dynamic RO performance are not automatically labelled fouling datasets. The source log separates candidates for normalization tests from datasets suitable for labelled fouling forecasting. The public landing pages were reviewed, but the downloadable workbooks/archives have not yet been fully inspected or used to train this artefact.
-- An initial Random Forest result was worse than the persistence baseline on validation. The implementation was corrected to select Random Forest only if it beats the persistence baseline on the validation split; otherwise the saved artefact uses the baseline. This is a deliberate conservative selection rule, not evidence of strong predictive skill.
-- The original forecasting artefact uses synthetic data only. A separate real-station workflow was subsequently added; its flow-forecasting metrics must not be represented as validated fouling-detection performance.
-- Checks completed in the build environment: Python compile check; `python -m pytest -q` passed 5 tests; training and prediction smoke test completed. `python -m compileall -q src tests` also completed successfully. Docker build and runtime checks succeeded; the user confirmed the dashboard and health endpoint worked.
+1. Identify public reverse-osmosis datasets with time-series operating variables and determine whether fouling or cleaning labels are available.
+2. Design chronological validation for flow forecasting, avoid data leakage, and compare a machine-learning candidate against a persistence baseline.
+3. Package the workflow as a documented Python CLI/API with input validation, tests, versioned model artifacts, configuration, Docker support, and explicit limitations.
 
+## 3. Important corrections and decisions
 
-## 27 October 2026 — post-integration review
-- Corrected a factor-of-1000 configuration error in the first-order TDS-to-osmotic-pressure coefficient: 35 g/L seawater now estimates about 26.25 bar rather than 0.026 bar. This remains a simplified approximation and requires process-engineering/vendor validation.
-- Updated the synthetic generator to use the same coefficient as normalization, avoiding an internally inconsistent synthetic pipeline.
-- Separated the selected model's 7-day prediction from the 14-day linear trend projection used for time-to-threshold estimation, and added a sanity test for seawater osmotic pressure.
-- The original model training data remain synthetic. The separate real-station workflow uses the station spreadsheet for flow forecasting and rule-based low-flow analysis; it does not establish confirmed fouling labels.
-## Final Validation Update
+- Generic feature scaling is not equivalent to physical normalization. A simplified temperature and net-driving-pressure correction was implemented, with its assumptions and limitations documented.
+- A factor-of-1000 error in the first-order TDS-to-osmotic-pressure coefficient was corrected. The approximation remains simplified and requires process-engineering or membrane-vendor validation.
+- The synthetic Random Forest candidate performed worse than the persistence baseline on validation. Persistence was selected instead of choosing a model based on held-out test results.
+- The seven-day model prediction and the separate fourteen-day linear trend projection were distinguished to avoid presenting them as the same forecast.
+- Public datasets describing RO performance were not assumed to contain verified fouling and cleaning labels. The data-source log records candidate sources and limitations.
+- A separate real-station workflow was added. Its flow forecasts and low-flow alerts are not evidence of confirmed membrane fouling.
 
-- **Automated tests:** 14 passed in the latest recorded run.
-- **Code compilation:** `python -m compileall -q src tests` completed successfully.
-- **Git commit:** `914e1de` — Add data validation tests.
-- **Repository status:** Not clean at the latest review; real-station analysis, training, metrics, predictions, and tests include uncommitted changes.
-- **Validation coverage:** Synthetic data acceptance, missing columns, duplicate timestamps, excessive time gaps, out-of-range temperature, non-numeric flow values, and non-positive permeate flow.
-- **Important limitation:** The original predictive model is trained on synthetic data. The separate real-station workflow forecasts RO production flow and flags low-flow patterns, but no confirmed fouling labels are available. Neither workflow should be treated as an operational maintenance recommendation.
+## 4. Synthetic-data experiment
 
+The synthetic forecasting experiment contains 286 supervised rows, split chronologically into 200 training, 43 validation, and 43 test rows.
 
-## Real-station workflow — documentation update
+- Random Forest validation MAE: 0.02077 normalized-flow ratio.
+- Persistence validation MAE: 0.00794 normalized-flow ratio.
+- Selected model: persistence baseline.
+- Selected-model test MAE: 0.00822.
+- Selected-model test RMSE: 0.00975.
 
-- Reviewed `data/real_station_model_metrics.json`: 540 observations, 2024-01-04 to 2025-06-26, with no missing calendar dates and 19 zero-RO-flow days.
-- The 7-day flow-forecasting experiment uses chronological splits: 364 training, 71 validation, and 71 test rows.
-- Validation MAE: Random Forest 529.36 m³/day; persistence baseline 258.24 m³/day. The persistence baseline was selected using validation MAE.
-- Test metrics for the selected baseline: MAE 97.02 m³/day; RMSE 183.42 m³/day. Random Forest test RMSE was lower, but the model selection rule was based on validation MAE and must not be changed using test results.
-- The rule-based analysis produced 47 alert days, 47 watch-low-flow days, and 19 production-stopped days in the recorded run. These are rule outputs, not verified fouling events.
-- Latest test and compilation checks reported by the user: 14 tests passed; `python -m compileall -q src tests` completed successfully.
-- Documentation was updated to distinguish the synthetic forecasting prototype from the real-station production-flow workflow. Re-run checks after documentation changes and record their actual results.
+These results describe the synthetic experiment only. They do not establish operational performance on a real plant.
 
-## Final Validation — 28 October 2026
+## 5. Real-station experiment
 
-- **Automated tests:** `python -m pytest -q` — 16 tests passed, as confirmed in the terminal.
-- **Code compilation:** `python -m compileall -q src tests` completed successfully.
-- **Git whitespace check:** `git diff --cached --check` completed without reported errors before the final commit.
-- **Git commit:** `0e00ab5` — Add real-station flow analysis and prediction tests.
-- **Repository status:** `git status --short` returned no entries immediately after the commit.
-- **Docker build:** The local Docker image was rebuilt and the container was started successfully, as confirmed by the user.
-- **API verification:** The user confirmed successful testing of `/health`, `/predict`, and `/analyze-real`.
-- **Documentation:** README and this AI use log document the real-station workflow and its limitations.
+The station spreadsheet contains 540 daily observations from 2024-01-04 through 2025-06-26, including 19 days with zero RO production.
 
-### Scientific limitations
+The recorded chronological split contains 364 training, 71 validation, and 71 test rows.
 
-- The original predictive model is trained on synthetic data and is not validated for operational plant decisions.
-- The real-station workflow forecasts RO production flow; low-flow alerts do not independently establish membrane fouling or determine when cleaning is required.
-- The real-station dataset contains 540 daily observations. The forecasting experiment uses chronological train, validation, and test splits.
-- The model metrics are experimental results and should not be interpreted as proof of fouling detection performance.
-## Final Validation — 28 October 2026
+- Random Forest validation MAE: 529.36 m³/day.
+- Persistence validation MAE: 258.24 m³/day.
+- Selected model: persistence baseline, based on validation MAE.
+- Selected-baseline test MAE: 97.02 m³/day.
+- Selected-baseline test RMSE: 183.42 m³/day.
 
-- **Automated tests:** `python -m pytest -q` — 16 tests passed, as confirmed in the terminal.
-- **Code compilation:** `python -m compileall -q src tests` completed successfully.
-- **Git whitespace check:** `git diff --cached --check` completed without reported errors before the final commit.
-- **Git commit:** `0e00ab5` — Add real-station flow analysis and prediction tests.
-- **Repository status:** `git status --short` returned no entries immediately after the commit.
-- **Docker build:** The local Docker image was rebuilt and the container was started successfully, as confirmed by the user.
-- **API verification:** The user confirmed successful testing of `/health`, `/predict`, and `/analyze-real`.
-- **Documentation:** README and this AI use log document the real-station workflow and its limitations.
+The rule-based analysis recorded 47 alert days, 47 watch-low-flow days, and 19 production-stopped days. These are rule outputs, not verified fouling events. The metrics apply to this dataset and split and do not establish generalization to other plants.
 
-### Scientific limitations
+## 6. Final verification — 28 October 2026
+
+- `python -m pytest -q`: 16 tests passed in the recorded final run.
+- `python -m compileall -q src tests`: completed successfully in the recorded run.
+- Git whitespace check: `git diff --cached --check` completed without reported errors before the final code commit.
+- Docker image was rebuilt and the container started successfully during local verification.
+- The user confirmed `GET /health` returned `{"status":"ok","service":"ro-fouling-early-warning"}`.
+- The `/docs` endpoint returned HTTP 200.
+- The `/predict` and `/analyze-real` workflows were previously reported as successfully tested.
+- The technical report and README were updated and committed to GitHub. The latest documentation commit before this log update was `3b232db`.
+
+## 7. Remaining limitations
 
 - The original predictive model is trained on synthetic data and is not validated for operational plant decisions.
-- The real-station workflow forecasts RO production flow; low-flow alerts do not independently establish membrane fouling or determine when cleaning is required.
-- The real-station dataset contains 540 daily observations. The forecasting experiment uses chronological train, validation, and test splits.
-- The model metrics are experimental results and should not be interpreted as proof of fouling detection performance.
+- The real-station workflow forecasts RO production flow and flags low-flow patterns; it does not independently diagnose membrane fouling or determine chemical-cleaning requirements.
+- No confirmed fouling labels or verified cleaning-event labels are available in the station dataset.
+- The simplified normalization requires engineering review.
+- Before operational use, the workflows need validation on appropriately labelled plant data, assessment on unseen periods or plants, and review by a qualified process engineer.
+
+## 8. Reproducibility and deliverables
+
+The repository includes the Python package, CLI, FastAPI service, Dockerfile, configuration, versioned model artifacts, sample data, source log, tests, README, technical report, and this AI use log.
+
+See `README.md` for setup, prediction, real-station analysis, and API commands.
