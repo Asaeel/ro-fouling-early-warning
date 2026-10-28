@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RO Monitor | Early Warning</title>
+<style>
+:root{--bg:#f4f7fb;--navy:#142b4a;--blue:#2475e8;--teal:#13a89e;--red:#df5b64;--amber:#e5a33d;--text:#23354d;--muted:#718096;--line:#e6ebf2}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:235px;background:var(--navy);color:white;padding:28px 18px;flex-shrink:0}
+.brand{font-size:20px;font-weight:750;margin:4px 8px 8px}
+.brand small{display:block;color:#a9bdd6;font-size:11px;font-weight:500;margin-top:7px;letter-spacing:1.5px}
+.navlabel{font-size:10px;color:#91a8c4;letter-spacing:1.6px;margin:38px 10px 12px}
+.navitem{padding:12px 13px;border-radius:9px;margin:5px 0;color:#c9d6e6;font-size:14px}
+.navitem.active{background:#294566;color:white}
+.sidefoot{margin-top:45px;font-size:11px;color:#9eb2cc;line-height:1.8}
+main{flex:1;min-width:0;padding:30px 34px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:27px}
+.eyebrow{font-size:11px;letter-spacing:1.8px;color:var(--blue);font-weight:700}
+h1{font-size:27px;margin:7px 0;font-weight:750;color:var(--navy)}
+.subtitle{color:var(--muted);font-size:13px}
+.status{background:#e4f7ef;color:#14835e;border-radius:20px;padding:9px 13px;font-size:12px;font-weight:700}
+.uploadbar{background:white;border:1px solid var(--line);border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:13px;flex-wrap:wrap;margin-bottom:20px}
+.uploadbar strong{display:block;font-size:14px;margin-bottom:5px}
+.uploadbar p{margin:0;color:var(--muted);font-size:12px}
+input[type=file]{max-width:240px;font-size:12px;color:var(--muted)}
+button{border:0;background:var(--blue);color:white;padding:11px 16px;border-radius:8px;font-weight:650;cursor:pointer}
+button:disabled{opacity:.55;cursor:wait}
+button.secondary{background:#eaf1fc;color:#225cb2}
+.message{font-size:12px;color:var(--muted);flex:1;min-width:140px}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:20px}
+.card,.panel{background:white;border:1px solid var(--line);border-radius:14px}
+.card{padding:20px}
+.cardtop{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:12px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--blue)}
+.value{font-size:30px;font-weight:750;letter-spacing:-1px;color:var(--navy);margin:16px 0 6px}
+.hint{font-size:11px;color:var(--muted);line-height:1.5}
+.grid2{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(260px,1fr);gap:18px;margin-bottom:20px}
+.panel{padding:21px;min-width:0}
+.panelhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:18px}
+.panel h2{font-size:15px;margin:0 0 6px;color:var(--navy)}
+.panelhead p{font-size:11px;color:var(--muted);margin:0;line-height:1.5}
+.pill{font-size:10px;padding:6px 9px;border-radius:20px;background:#eef4ff;color:#2866bd;white-space:nowrap}
+.chartwrap{height:250px;position:relative}
+canvas{width:100%;height:100%}
+.legend{display:flex;gap:17px;flex-wrap:wrap;color:var(--muted);font-size:11px;margin-top:12px}
+.legend span:before{content:"";display:inline-block;width:8px;height:8px;border-radius:3px;background:var(--blue);margin-right:6px}
+.legend .orange:before{background:var(--amber)}
+.legend .red:before{background:var(--red)}
+.metricrow{display:flex;justify-content:space-between;align-items:center;padding:15px 0;border-bottom:1px solid var(--line);font-size:12px}
+.metricrow:last-child{border-bottom:0}
+.metricrow span{color:var(--muted)}
+.metricrow strong{color:var(--navy);font-size:13px}
+.notice{background:#fff7e8;border:1px solid #f5e1b7;color:#80591a;padding:12px 14px;border-radius:9px;font-size:11px;line-height:1.7;margin-top:15px}
+.tablewrap{overflow:auto}
+table{border-collapse:collapse;width:100%;font-size:12px;white-space:nowrap}
+th{text-align:left;color:var(--muted);font-weight:600;font-size:10px;letter-spacing:.5px;background:#f8fafd}
+th,td{padding:13px 12px;border-bottom:1px solid var(--line)}
+td{color:var(--text)}
+.tag{display:inline-block;border-radius:15px;padding:5px 8px;font-size:10px;font-weight:700}
+.tag.alert{background:#fff0ef;color:#c3434c}
+.tag.watch{background:#fff6e5;color:#9c6b12}
+.tag.stop{background:#edf0f5;color:#586579}
+.tag.normal{background:#e6f7ef;color:#16815b}
+.empty{text-align:center;color:var(--muted);padding:28px;font-size:12px}
+.footer{color:var(--muted);font-size:10px;line-height:1.7;margin:22px 2px}
+@media(max-width:1000px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.grid2{grid-template-columns:1fr}.sidebar{width:190px}main{padding:24px}}
+@media(max-width:650px){.sidebar{display:none}main{padding:18px}.cards{gap:9px}.card{padding:14px}.value{font-size:25px}.uploadbar{align-items:flex-start}}
+@media print {
+ body{background:white;color:#111}
+ .sidebar,.uploadbar,#download,#printReport,.footer{display:none!important}
+ main{padding:0!important}
+ .cards{grid-template-columns:repeat(4,1fr);gap:8px}
+ .card,.panel{break-inside:avoid;box-shadow:none;border:1px solid #ddd}
+ .grid2{grid-template-columns:1.4fr 1fr;gap:10px}
+ .chartwrap{height:210px}
+ .tablewrap{overflow:visible}
+ table{white-space:normal;font-size:9px}
+ th,td{padding:6px 4px}
+ h1{font-size:22px}
+ button{display:none!important}
+}
+
+.navitem {
+  display: block;
+  width: 100%;
+  border: 0;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  background: transparent;
+}
+.navitem.active {
+  background: #294566;
+  color: white;
+}
+.navitem:focus-visible {
+  outline: 2px solid #5485d8;
+  outline-offset: 2px;
+}
+section[id], main[id], div[id="reports"] {
+  scroll-margin-top: 20px;
+}
+
+
+.forecast-tag {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 20px;
+  background: #fff0d6;
+  color: #855500;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.forecast-upload {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+}
+.forecast-upload label {
+  font-weight: 600;
+}
+.forecast-upload input {
+  flex: 1;
+  min-width: 200px;
+  max-width: 100%;
+}
+.forecast-note {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.forecast-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+.forecast-kpi {
+  padding: 15px;
+  border: 1px solid #dbe3ed;
+  border-radius: 10px;
+  min-width: 0;
+}
+.forecast-kpi-label {
+  color: #64748b;
+  font-size: 12px;
+  margin-bottom: 8px;
+  overflow-wrap: anywhere;
+}
+.forecast-kpi-value {
+  font-size: 19px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.forecast-details {
+  margin: 16px 0;
+  padding: 12px;
+  border: 1px solid #dbe3ed;
+  border-radius: 9px;
+}
+.forecast-details pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 420px;
+  overflow: auto;
+  font-size: 12px;
+}
+#modelForecast {
+  scroll-margin-top: 20px;
+}
+
+
+.forecast-chart-wrap {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid #dbe3ed;
+  border-radius: 10px;
+}
+.forecast-chart-wrap h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+#forecastChart {
+  display: block;
+  max-width: 100%;
+}
+#forecastSummary {
+  margin-bottom: 0;
+  line-height: 1.6;
+}
+\n</style>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="brand">RO Monitor<small>INTELLIGENT OPERATIONS</small></div>
+  <div class="navlabel">WORKSPACE</div>
+  <button type="button" class="navitem active" data-target="dashboard">▦ &nbsp; Dashboard</button>
+  <button type="button" class="navitem" data-target="production">⌁ &nbsp; Production Analytics</button>
+  <button type="button" class="navitem" data-target="alerts">⚑ &nbsp; Early-Warning Alerts</button>
+  <button type="button" class="navitem" data-target="modelForecast">◷ &nbsp; Forecast Overview</button>
+  <button type="button" class="navitem" data-target="reports">▤ &nbsp; Data &amp; Reports</button>
+  <div class="sidefoot">RO MEMBRANE MONITORING<br>Prototype v0.1.0<br><br>Decision support only</div>
+</aside>
+<main id="dashboard">
+  <header class="top">
+    <div><div class="eyebrow">OPERATIONS OVERVIEW</div><h1>Early-Warning Dashboard</h1><div class="subtitle">Reverse osmosis production monitoring and trend analysis</div></div>
+    <div class="status">● &nbsp; Monitoring workspace</div>
+  </header>
+
+  <section class="uploadbar">
+    <div><strong>Analyze your operating data</strong><p>Upload the plant Excel workbook or a compatible CSV file.</p></div>
+    <input id="file" type="file" accept=".csv,.xlsx,.xls">
+    <button id="analyze">Analyze data</button>
+    <button id="sample" class="secondary">Load sample results</button>
+    <div id="message" class="message">Upload a file to view its analysis.</div>
+  </section>
+
+  <section class="cards" id="production">
+    <div class="card"><div class="cardtop">Records analyzed <i class="dot"></i></div><div class="value" id="records">—</div><div class="hint">Daily operating records</div></div>
+    <div class="card"><div class="cardtop">Early-warning alerts <i class="dot" style="background:var(--red)"></i></div><div class="value" id="alerts">—</div><div class="hint">Sustained production decline indicators</div></div>
+    <div class="card"><div class="cardtop">Low-flow days <i class="dot" style="background:var(--amber)"></i></div><div class="value" id="lowdays">—</div><div class="hint">Below the configured baseline threshold</div></div>
+    <div class="card"><div class="cardtop">Production stopped <i class="dot" style="background:#8795a9"></i></div><div class="value" id="stopped">—</div><div class="hint">Recorded days with zero RO output</div></div>
+  </section>
+
+  <section class="grid2" id="forecast">
+    <div class="panel">
+      <div class="panelhead"><div><h2>RO Production Trend</h2><p>Daily production and historical operating baseline</p></div><span class="pill" id="chartbadge">Awaiting data</span></div>
+      <div class="chartwrap"><canvas id="chart"></canvas></div>
+      <div class="legend"><span>RO production</span><span class="orange">Historical baseline</span><span class="red">Alert days</span></div>
+    </div>
+    <div class="panel">
+      <div class="panelhead"><div><h2>Analysis Summary</h2><p>Threshold and data-quality overview</p></div></div>
+      <div class="metricrow"><span>Low-flow threshold</span><strong id="threshold">90%</strong></div>
+      <div class="metricrow"><span>Baseline window</span><strong id="baseline">30 days</strong></div>
+      <div class="metricrow"><span>Consecutive alert days</span><strong id="consecutive">3 days</strong></div>
+      <div class="metricrow"><span>Data source</span><strong id="datatype">Not loaded</strong></div>
+      <div class="notice" id="interpretation">Upload your operating data to generate an analysis. Alerts are indicators of production decline, not proof of membrane fouling.</div>
+    </div>
+  </section>
+
+  
+<section class="panel" id="modelForecast">
+  <div class="panelhead">
+    <div>
+      <h2>Experimental Model Forecast</h2>
+      <p>Run the model on a CSV file containing the required model inputs.</p>
+    </div>
+    <span class="forecast-tag">EXPERIMENTAL</span>
+  </div>
+
+  <div class="forecast-upload">
+    <label for="forecastFile">Model input CSV</label>
+    <input id="forecastFile" type="file" accept=".csv">
+    <button type="button" id="runForecast">Run forecast</button>
+  </div>
+
+  <p class="forecast-note">
+    This forecast uses model-compatible input data. It is separate from
+    the real operational dataset analysis below.
+  </p>
+
+  <div id="forecastMessage" class="message" role="status">
+    Select a model input CSV to begin.
+  </div>
+
+  <div id="forecastResults" hidden>
+    <div id="forecastCards" class="forecast-kpis"></div>
+    <div class="forecast-chart-wrap">
+      <h3>7-Day Flow Outlook</h3>
+      <canvas id="forecastChart" height="180"></canvas>
+      <p id="forecastSummary" class="forecast-note"></p>
+    </div>
+    <details class="forecast-details">
+      <summary>View full model response</summary>
+      <pre id="forecastJson"></pre>
+    </details>
+    <p class="forecast-note">
+      Model output is experimental decision support, not confirmation of
+      membrane fouling or a validated cleaning recommendation.
+    </p>
+  </div>
+</section>
+
+<section class="panel" id="alerts">
+    <div class="panelhead"><div><h2>Recent Alerts &amp; Operating Events</h2><p>Latest flagged dates from the analyzed dataset</p></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <span class="pill" id="alertbadge">0 events</span>
+    <button id="download" class="secondary">Download CSV</button>
+    <button id="printReport">Print / Save PDF</button>
+    </div></div>
+    <div id="reports" class="tablewrap"><table><thead><tr><th>DATE</th><th>PHASE</th><th>RO OUTPUT</th><th>BASELINE</th><th>FLOW VS BASELINE</th><th>STATUS</th><th>INDICATOR</th></tr></thead><tbody id="rows"><tr><td colspan="6" class="empty">No analysis loaded yet. Upload a file to begin.</td></tr></tbody></table></div>
+  </section>
+  <div class="footer">Important limitation: this dashboard flags operational production declines. It does not independently diagnose membrane fouling or prescribe cleaning. Forecasts from the prototype model use synthetic training data and are not validated for operational decisions.</div>
+</main>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let chartData=[];
+let lastSummary={};
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function drawChart(data){
+ const canvas=$("chart"),ctx=canvas.getContext("2d"),box=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+ canvas.width=Math.max(300,box.width)*dpr;canvas.height=Math.max(200,box.height)*dpr;ctx.scale(dpr,dpr);
+ const w=canvas.width/dpr,h=canvas.height/dpr,p={l:45,r:12,t:12,b:32},cw=w-p.l-p.r,ch=h-p.t-p.b;
+ ctx.clearRect(0,0,w,h);
+ const vals=data.map(r=>Number(r["RO product (m3/day)"])).filter(Number.isFinite);
+ if(!vals.length){ctx.fillStyle="#718096";ctx.font="13px sans-serif";ctx.fillText("Upload data to display the production trend",15,h/2);return;}
+ const max=Math.max(...vals,1)*1.12,min=0;
+ const x=i=>p.l+(data.length<=1?0:i/(data.length-1))*cw;
+ const y=v=>p.t+ch-(v-min)/(max-min)*ch;
+ ctx.font="10px sans-serif";ctx.strokeStyle="#e8edf4";ctx.fillStyle="#718096";ctx.lineWidth=1;
+ for(let i=0;i<=4;i++){let yy=p.t+ch*i/4;ctx.beginPath();ctx.moveTo(p.l,yy);ctx.lineTo(w-p.r,yy);ctx.stroke();ctx.fillText((max*(1-i/4)).toFixed(0),3,yy+3);}
+ const stride=Math.max(1,Math.ceil(data.length/6));
+ for(let i=0;i<data.length;i+=stride){let label=String(data[i].Date??"").slice(5);ctx.fillText(label,x(i)-13,h-10);}
+ function line(key,color,width,dash=[]){ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);let started=false;data.forEach((r,i)=>{let v=Number(r[key]);if(!Number.isFinite(v)){started=false;return;}if(!started){ctx.moveTo(x(i),y(v));started=true;}else ctx.lineTo(x(i),y(v));});ctx.stroke();ctx.setLineDash([]);}
+ line("baseline_ro_m3_day","#e5a33d",1.7,[5,4]);
+ line("RO product (m3/day)","#2475e8",2);
+ data.forEach((r,i)=>{if(r.alert===true||String(r.alert).toLowerCase()==="true"){let v=Number(r["RO product (m3/day)"]);if(Number.isFinite(v)){ctx.beginPath();ctx.fillStyle="#df5b64";ctx.arc(x(i),y(v),3.5,0,Math.PI*2);ctx.fill();}}});
+}
+function statusOf(r){
+ let s=String(r.status||"");
+ if(s==="alert_low_flow")return ["Alert","alert"];
+ if(s==="watch_low_flow")return ["Watch","watch"];
+ if(s==="production_stopped")return ["Stopped","stop"];
+ if(s==="normal")return ["Normal","normal"];
+ return [s.replaceAll("_"," ")||"—","stop"];
+}
+function showResults(summary,rows){
+ lastSummary=summary||{};
+ chartData=rows||[];
+ $("records").textContent=summary.rows_analyzed??rows.length;
+ $("alerts").textContent=summary.alert_count??"—";
+ $("lowdays").textContent=summary.low_flow_day_count??"—";
+ const counts=summary.status_counts||{};
+ $("stopped").textContent=counts.production_stopped??rows.filter(r=>Number(r["RO product (m3/day)"])===0).length;
+ $("threshold").textContent=((summary.threshold_ratio??.9)*100).toFixed(0)+"%";
+ $("baseline").textContent=(summary.baseline_days??30)+" days";
+ $("consecutive").textContent=(summary.consecutive_days_for_alert??3)+" days";
+ $("datatype").textContent=summary.data_type==="real_operational_dataset"?"Real operational data":(summary.data_type||"Analyzed data");
+ $("interpretation").textContent=summary.interpretation||"Analysis complete. Review the production trend and flagged operating events.";
+ $("chartbadge").textContent=rows.length+" records";
+ $("alertbadge").textContent=(summary.alert_count??0)+" alerts";
+ const tbody=$("rows");
+ const relevant=rows.filter(r=>["alert_low_flow","watch_low_flow","production_stopped"].includes(String(r.status))).slice(-15).reverse();
+ if(!relevant.length){tbody.innerHTML='<tr><td colspan="7" class="empty">No flagged events in the returned data.</td></tr>';}
+ else tbody.innerHTML=relevant.map(r=>{
+ let [label,cls]=statusOf(r);
+ let ratio=Number(r.flow_pct_of_baseline);
+ let reason=String(r.status)==="production_stopped"?"RO output recorded as zero":String(r.status)==="alert_low_flow"?"Below 90% baseline for consecutive days":String(r.status)==="watch_low_flow"?"RO output below 90% of baseline":"Review operating conditions";
+ return `<tr><td>${esc(r.Date)}</td><td>${esc(r.Phase)}</td><td>${Number(r["RO product (m3/day)"]).toLocaleString(undefined,{maximumFractionDigits:2})}</td><td>${Number.isFinite(Number(r.baseline_ro_m3_day))?Number(r.baseline_ro_m3_day).toLocaleString(undefined,{maximumFractionDigits:2}):"—"}</td><td>${Number.isFinite(ratio)?ratio.toFixed(1)+"%":"—"}</td><td><span class="tag ${cls}">${esc(label)}</span></td><td>${reason}</td></tr>`
+ }).join("");
+ drawChart(rows);
+}
+$("analyze").addEventListener("click",async()=>{
+ const file=$("file").files[0];if(!file){$("message").textContent="Please select an Excel or CSV file first.";return;}
+ const btn=$("analyze");btn.disabled=true;$("message").textContent="Analyzing file…";
+ try{
+  const fd=new FormData();fd.append("file",file);
+  const res=await fetch("/analyze-real",{method:"POST",body:fd});
+  const result=await res.json();if(!res.ok)throw new Error(result.detail||"Analysis failed.");
+  if(!Array.isArray(result.rows))throw new Error("Analysis returned no result rows.");
+  showResults(result.summary,result.rows);$("message").textContent="Analysis completed successfully.";
+ }catch(e){$("message").textContent="Error: "+e.message;}
+ finally{btn.disabled=false;}
+});
+$("sample").addEventListener("click",()=>{
+ $("message").textContent="Sample figures are illustrative until connected to the analysis endpoint.";
+ showResults({rows_analyzed:540,alert_count:47,low_flow_day_count:94,status_counts:{production_stopped:19},threshold_ratio:.9,baseline_days:30,consecutive_days_for_alert:3,data_type:"Illustrative sample",interpretation:"Illustrative preview only. Run analysis on your operating workbook to see its actual results."},[]);
+});
+
+$("download").addEventListener("click",()=>{
+ if(!chartData.length){$("message").textContent="Analyze a data file first.";return;}
+ const headers=[...new Set(chartData.flatMap(r=>Object.keys(r)))];
+ const csvCell=v=>{if(v===null||v===undefined)return "";let x=String(v);return '"'+x.replace(/"/g,'""')+'"';};
+ const csv=[headers.map(csvCell).join(","),...chartData.map(r=>headers.map(h=>csvCell(r[h])).join(","))].join("\r\n");
+ const blob=new Blob(["\uFEFF",csv],{type:"text/csv;charset=utf-8;"});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");a.href=url;a.download="ro_analysis_results.csv";a.click();
+ URL.revokeObjectURL(url);
+ $("message").textContent="Downloaded all "+chartData.length+" analyzed records.";
+});
+$("printReport").addEventListener("click",()=>{
+ if(!chartData.length){$("message").textContent="Analyze a data file first.";return;}
+ window.print();
+});
+
+window.addEventListener("resize",()=>drawChart(chartData));
+drawChart([]);
+
+document.querySelectorAll(".navitem[data-target]").forEach((item) => {
+  item.addEventListener("click", () => {
+    const target = document.getElementById(item.dataset.target);
+    if (!target) return;
+
+    document.querySelectorAll(".navitem").forEach((nav) => {
+      nav.classList.toggle("active", nav === item);
+    });
+
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+});
+
+
+const forecastFileInput = document.getElementById("forecastFile");
+const forecastRunButton = document.getElementById("runForecast");
+const forecastMessage = document.getElementById("forecastMessage");
+const forecastResults = document.getElementById("forecastResults");
+const forecastCards = document.getElementById("forecastCards");
+const forecastJson = document.getElementById("forecastJson");
+
+function forecastEscape(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+
+function forecastFormatPercent(value) {
+  if (value === null || value === undefined || !Number.isFinite(Number(value))) {
+    return "Not available";
+  }
+  return (Number(value) * 100).toFixed(1) + "%";
+}
+
+function forecastFind(result, keys) {
+  for (const key of keys) {
+    if (result[key] !== undefined && result[key] !== null) {
+      return result[key];
+    }
+  }
+  return null;
+}
+
+
+function forecastDrawChart(current, predicted, trend, threshold) {
+  const canvas = document.getElementById("forecastChart");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  const width = Math.max(320, canvas.parentElement.clientWidth - 24);
+  const height = 280;
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  canvas.style.width = "100%";
+  canvas.style.height = height + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+
+  const series = [
+    { label: "Current flow", value: current, color: "#2563eb" },
+    { label: "7-day model forecast", value: predicted, color: "#0f9d78" },
+    { label: "Trend projection", value: trend, color: "#d97706" },
+    { label: "Alert threshold", value: threshold, color: "#dc2626" }
+  ].filter(s => s.value !== null && Number.isFinite(Number(s.value)));
+
+  if (series.length < 2) {
+    ctx.fillStyle = "#64748b";
+    ctx.font = "14px sans-serif";
+    ctx.fillText("Not enough forecast values to display.", 12, 35);
+    return;
+  }
+
+  // Use percentage values and a focused axis so small differences are visible.
+  const vals = series.map(s => Number(s.value) * 100);
+  let min = Math.floor((Math.min(...vals) - 3) / 5) * 5;
+  let max = Math.ceil((Math.max(...vals) + 3) / 5) * 5;
+  min = Math.max(0, min);
+  max = Math.min(200, max);
+  if (max - min < 10) {
+    min = Math.max(0, min - 5);
+    max = Math.min(200, max + 5);
+  }
+
+  const left = 54, right = width - 18, top = 24, bottom = 205;
+  const plotW = right - left;
+  const plotH = bottom - top;
+  const y = v => bottom - ((v - min) / (max - min || 1)) * plotH;
+
+  ctx.font = "12px sans-serif";
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#e2e8f0";
+  ctx.fillStyle = "#64748b";
+
+  for (let i = 0; i <= 4; i++) {
+    const val = min + (max - min) * i / 4;
+    const yy = y(val);
+    ctx.beginPath();
+    ctx.moveTo(left, yy);
+    ctx.lineTo(right, yy);
+    ctx.stroke();
+    ctx.fillText(val.toFixed(0) + "%", 5, yy + 4);
+  }
+
+  // The threshold is a horizontal reference line.
+  const thresholdValue = threshold === null ? null : Number(threshold) * 100;
+  if (thresholdValue !== null && thresholdValue >= min && thresholdValue <= max) {
+    ctx.beginPath();
+    ctx.strokeStyle = "#dc2626";
+    ctx.setLineDash([6, 4]);
+    ctx.lineWidth = 2;
+    ctx.moveTo(left, y(thresholdValue));
+    ctx.lineTo(right, y(thresholdValue));
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Separate, evenly spaced markers make close values easier to compare.
+  const count = series.length;
+  series.forEach((s, i) => {
+    const x = left + plotW * (i + 0.5) / count;
+    const value = Number(s.value) * 100;
+    const yy = y(value);
+
+    ctx.beginPath();
+    ctx.strokeStyle = s.color;
+    ctx.lineWidth = 2;
+    ctx.moveTo(x, bottom);
+    ctx.lineTo(x, yy);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.fillStyle = s.color;
+    ctx.arc(x, yy, 6, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#1e293b";
+    ctx.font = "bold 12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(value.toFixed(1) + "%", x, Math.max(top + 12, yy - 12));
+
+    ctx.fillStyle = "#475569";
+    ctx.font = "11px sans-serif";
+    const label = s.label.length > 18 ? s.label.slice(0, 17) + "…" : s.label;
+    ctx.fillText(label, x, bottom + 19);
+  });
+
+  ctx.textAlign = "left";
+}
+
+
+forecastRunButton.addEventListener("click", async () => {
+  const file = forecastFileInput.files[0];
+
+  if (!file) {
+    forecastMessage.textContent = "Choose a model input CSV file first.";
+    return;
+  }
+
+  if (!file.name.toLowerCase().endsWith(".csv")) {
+    forecastMessage.textContent = "Please choose a CSV file.";
+    return;
+  }
+
+  forecastRunButton.disabled = true;
+  forecastMessage.textContent = "Running the model...";
+  forecastResults.hidden = true;
+  forecastCards.innerHTML = "";
+
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch("/predict", {
+      method: "POST",
+      body: formData
+    });
+
+    const raw = await response.text();
+    let result;
+
+    try {
+      result = JSON.parse(raw);
+    } catch {
+      throw new Error("The API returned an unreadable response.");
+    }
+
+    if (!response.ok) {
+      const detail = result.detail || JSON.stringify(result);
+      throw new Error(detail);
+    }
+
+    const currentRaw = forecastFind(result, [
+      "current_normalized_flow_ratio",
+      "current_normalized_flow_pct",
+      "current_normalized_flow"
+    ]);
+    const predictedRaw = forecastFind(result, [
+      "predicted_normalized_flow_ratio_7d",
+      "predicted_normalized_flow_pct_7d",
+      "predicted_normalized_flow_7d"
+    ]);
+    const trendRaw = forecastFind(result, [
+      "trend_projection_7d",
+      "trend_projected_normalized_flow_pct_7d",
+      "trend_projected_normalized_flow_ratio_7d"
+    ]);
+    const thresholdRaw = forecastFind(result, [
+      "threshold",
+      "threshold_flow_ratio",
+      "threshold_ratio"
+    ]);
+
+    function asRatio(value) {
+      if (value === null || value === undefined || !Number.isFinite(Number(value))) return null;
+      const n = Number(value);
+      return n > 2 ? n / 100 : n;
+    }
+
+    const current = asRatio(currentRaw);
+    const predicted = asRatio(predictedRaw);
+    const trend = asRatio(trendRaw);
+    const threshold = asRatio(thresholdRaw);
+
+    const cards = [
+      ["Current Flow", forecastFormatPercent(current)],
+      ["7-Day Model Forecast", forecastFormatPercent(predicted)],
+      ["Trend Projection", forecastFormatPercent(trend)],
+      ["Alert Threshold", forecastFormatPercent(threshold)]
+    ];
+
+    forecastCards.innerHTML = cards.map(([label, value]) => `
+      <div class="forecast-kpi">
+        <div class="forecast-kpi-label">${forecastEscape(label)}</div>
+        <div class="forecast-kpi-value">${forecastEscape(value)}</div>
+      </div>
+    `).join("");
+
+    forecastDrawChart(current, predicted, trend, threshold);
+
+    const summary = document.getElementById("forecastSummary");
+    if (current !== null && predicted !== null && trend !== null) {
+      const change = (trend - current) * 100;
+      summary.textContent = change < -0.05
+        ? `The trend projection indicates a decline of ${Math.abs(change).toFixed(1)} percentage points over 7 days. This is an experimental estimate, not a confirmed fouling diagnosis.`
+        : change > 0.05
+          ? `The trend projection indicates an increase of ${change.toFixed(1)} percentage points over 7 days. This is an experimental estimate.`
+          : "The model and trend estimates show little change over 7 days. This is an experimental estimate.";
+    } else {
+      summary.textContent = "Some forecast fields were unavailable. Open the full response below to inspect the model output.";
+    }
+
+    forecastJson.textContent = JSON.stringify(result, null, 2);
+    forecastResults.hidden = false;
+    forecastMessage.textContent =
+      "Forecast completed. Results are experimental and use synthetic training data.";
+  } catch (error) {
+    forecastMessage.textContent = "Forecast failed: " + error.message;
+  } finally {
+    forecastRunButton.disabled = false;
+  }
+});
+
+</script>
+</body>
+</html>

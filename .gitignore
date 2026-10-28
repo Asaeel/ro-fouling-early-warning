@@ -1,0 +1,27 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
+.env
+
+# Editor backups
+*.backup
+*.backup-*
+*~ 
+
+# Temporary files and logs
+*.log
+.DS_Store
+
+# Generated packaging metadata
+src/*.egg-info/
+
+# Python and test cache directories
+**/__pycache__/
+.pytest_cache/
+
+# Editor backup files
+*.backup
+*.backup-*
+*~

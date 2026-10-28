@@ -1,0 +1,17 @@
+model:
+  artifact_path: "artifacts/model_v1.joblib"
+  version: "0.1.0"
+  random_state: 42
+normalization:
+  reference_temperature_c: 25.0
+  reference_ndp_bar: 20.0
+  temperature_coefficient_per_c: 0.0239
+  osmotic_pressure_bar_per_g_l: 0.75
+  assume_permeate_osmotic_pressure_negligible: true
+forecast:
+  threshold_flow_ratio: 0.90
+  horizon_days: 14
+  minimum_rows: 14
+  max_gap_hours: 48
+  minimum_ndp_bar: 0.1
+  minimum_feed_pressure_bar: 0.0
