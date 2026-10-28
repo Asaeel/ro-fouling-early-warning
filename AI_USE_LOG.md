@@ -5,7 +5,7 @@ This is a working log. Keep it accurate and update it after every further tool o
 ## Tools used so far
 - ChatGPT: helped translate the brief into a software plan, draft the project structure and code, and identify assumptions that need to be disclosed.
 - Web search/browser: reviewed public landing pages for candidate RO datasets and their descriptions, variables, and access notes.
-- Python execution environment: compiled the Python files, ran pytest, trained the demonstration artefact, and ran a prediction smoke test. These checks were run in the project build environment; repeat them on the target Mac before final submission.
+- Python execution environment: compiled the Python files, ran pytest, trained the demonstration artefact, and ran a prediction smoke test. Local validation was completed on the target Mac. The Docker image was built and the container, dashboard, and health endpoint were checked.
 
 ## Key prompts used (summarized)
 1. “Find public datasets for reverse-osmosis desalination with time-series pressure, temperature, salinity, permeate flow, and fouling/cleaning labels; distinguish direct downloads from data available on request.”
@@ -17,7 +17,7 @@ This is a working log. Keep it accurate and update it after every further tool o
 - Public datasets that characterize dynamic RO performance are not automatically labelled fouling datasets. The source log separates candidates for normalization tests from datasets suitable for labelled fouling forecasting. The public landing pages were reviewed, but the downloadable workbooks/archives have not yet been fully inspected or used to train this artefact.
 - An initial Random Forest result was worse than the persistence baseline on validation. The implementation was corrected to select Random Forest only if it beats the persistence baseline on the validation split; otherwise the saved artefact uses the baseline. This is a deliberate conservative selection rule, not evidence of strong predictive skill.
 - The artefact currently uses synthetic data only. The model metrics must not be represented as real-plant performance.
-- Checks completed in the build environment: Python compile check; `pytest -q` passed 4 tests; training and prediction smoke test completed. Re-run these commands in a clean Mac environment and record the exact result before final delivery.
+- Checks completed in the build environment: Python compile check; `python -m pytest -q` passed 5 tests; training and prediction smoke test completed. `python -m compileall -q src tests` also completed successfully. Docker build and runtime checks succeeded; the user confirmed the dashboard and health endpoint worked.
 
 
 ## 27 October 2026 — post-integration review
