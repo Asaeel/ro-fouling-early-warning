@@ -114,3 +114,34 @@ docker run --rm -p 8000:8000 ro-fouling-early-warning
 - No plant-specific membrane geometry, recovery, membrane age, cleaning records, or sensor calibration.
 - No automatic imputation of missing values; missing required values are rejected.
 - Gaps above configured limit are rejected instead of silently interpolated.
+
+## Technical Report and Final Verification
+
+The two-page technical report is available at `technical_report.pdf`.
+It summarizes the prototype methodology, synthetic-data validation,
+real-station flow forecasting, software packaging, and scientific limitations.
+
+### Final verification
+
+- Automated tests: 16 passed in the recorded final run.
+- Python compilation: `python -m compileall -q src tests`.
+- API health endpoint: `GET /health` returned HTTP 200.
+- API documentation: `/docs` returned HTTP 200.
+- Docker container: started successfully during local verification.
+- Git working tree: clean before the technical report update.
+
+### Interpreting the results
+
+This repository contains two separate workflows:
+
+1. **Synthetic forecasting prototype:** the persistence baseline was selected
+   because its validation MAE was lower than the Random Forest candidate.
+2. **Real-station workflow:** uses 540 daily observations to forecast RO
+   production flow and flag low-flow patterns. The selected persistence
+   baseline had validation MAE of 258.24 m³/day and held-out test MAE of
+   97.02 m³/day.
+
+These results do not demonstrate validated membrane-fouling detection.
+Low-flow alerts are rule-based indicators, not confirmed fouling events or
+chemical-cleaning recommendations. The workflows require further validation
+on labelled plant data and review by a qualified process engineer.
