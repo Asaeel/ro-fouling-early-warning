@@ -25,3 +25,11 @@ This is a working log. Keep it accurate and update it after every further tool o
 - Updated the synthetic generator to use the same coefficient as normalization, avoiding an internally inconsistent synthetic pipeline.
 - Separated the selected model's 7-day prediction from the 14-day linear trend projection used for time-to-threshold estimation, and added a sanity test for seawater osmotic pressure.
 - The training data remain synthetic; no real-plant performance claim is made.
+## Final Validation Update
+
+- **Automated tests:** 10 passed.
+- **Code compilation:** `python -m compileall -q src tests` completed successfully.
+- **Git commit:** `914e1de` — Add data validation tests.
+- **Repository status:** Clean working tree after commit.
+- **Validation coverage:** Synthetic data acceptance, missing columns, duplicate timestamps, excessive time gaps, out-of-range temperature, non-numeric flow values, and non-positive permeate flow.
+- **Important limitation:** The predictive model is trained on synthetic data only. Its performance has not been validated on real plant operating data, so predictions should be treated as prototype estimates rather than operational recommendations.
